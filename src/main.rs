@@ -90,32 +90,19 @@ async fn git(Path(name): Path<String>)-> (StatusCode, Html<String>){
     };
     let mut index: Vec<_> = repo.index().expect("Couldn't get the repo index").iter().collect();
     dbg!(index.len());
-    let html_list: String = index.into_iter().map(|item| {
-        let tmp = String::from_utf8(item.path).unwrap();
-
-   dbg!(&tmp);
-   println!("This line executed");
-        format!("<li>{}</li>\n",&tmp)
+    let html_list: Vec<String> = index.into_iter().map(|item| {
+        String::from_utf8(item.path).unwrap()
     }).collect();
     dbg!(&html_list);
 
+    #[derive(Template)]
+    #[template(path = "index.html")]
+    struct IndexTemplate {
+        files: Vec<String>
+    }
+    let x = IndexTemplate { files: html_list };
     dbg!(&name);
-    (StatusCode::OK, Html(format!
-                          (r#"<!DOCTYPE html>
-            <html lang="en">
-              <head>
-                  <meta charset="UTF-8">
-                      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                          <meta http-equiv="X-UA-Compatible" content="ie=edge">
-                              <title>HTML 5 Boilerplate</title>
-                                  <link rel="stylesheet" href="style.css">
-                                    </head>
-                                      <body>
-
-                                            {}
-                                            </body>
-                                            </html>"#,html_list
-                )))
+    (StatusCode::OK, Html( x.render().unwrap())) 
 
 }
 
