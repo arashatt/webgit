@@ -9,6 +9,7 @@ use axum::response::IntoResponse;
 use serde::Deserialize;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use git2::Repository;
+use askama::Template;
 
 #[tokio::main]
 async fn main() {
