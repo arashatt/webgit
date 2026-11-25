@@ -1,0 +1,47 @@
+{% extends "repo_base.html" %}
+
+{#
+  active = "commit", rev = c.id
+  Fields:
+    c: CommitDetail
+      { id, subject, body, refs: Vec<RefLabel>,
+        author_name, author_email, author_date,
+        committer_name, committer_email, committer_date,
+        tree_id, parents: Vec<String> }
+    files: Vec<ChangedFile>
+      { path, status_class, status_text, deleted: bool }
+      status_class: new | deleted | moved | mode_chng | copied | "" (plain modification)
+      status_text: e.g. "new file with mode: 0644", empty for plain modifications
+#}
+
+{% block content %}
+<a class="title" href="/{{ repo }}/commit/{{ c.id }}">{{ c.subject }}{% for r in c.refs %} <span class="refs"><span class="{{ r.kind }}">{{ r.name }}</span></span>{% endfor %}</a>
+<div class="title_text">
+<table class="object_header">
+<tr><td>author</td><td>{{ c.author_name }} &lt;{{ c.author_email }}&gt;</td></tr>
+<tr><td></td><td>{{ c.author_date }}</td></tr>
+<tr><td>committer</td><td>{{ c.committer_name }} &lt;{{ c.committer_email }}&gt;</td></tr>
+<tr><td></td><td>{{ c.committer_date }}</td></tr>
+<tr><td>commit</td><td class="sha1">{{ c.id }}</td><td></td></tr>
+<tr><td>tree</td><td class="sha1"><a class="list" href="/{{ repo }}/tree/{{ c.id }}">{{ c.tree_id }}</a></td><td class="link"><a href="/{{ repo }}/tree/{{ c.id }}">tree</a> | <a href="/{{ repo }}/snapshot/{{ c.id }}">snapshot</a></td></tr>
+{% for p in c.parents %}
+<tr><td>parent</td><td class="sha1"><a class="list" href="/{{ repo }}/commit/{{ p }}">{{ p }}</a></td><td class="link"><a href="/{{ repo }}/commit/{{ p }}">commit</a> | <a href="/{{ repo }}/commitdiff/{{ c.id }}?parent={{ p }}">diff</a></td></tr>
+{% endfor %}
+</table>
+</div>
+
+<div class="page_body">
+<div class="commit_message">{{ c.body }}</div>
+</div>
+
+<div class="list_head">{% if files.len() == 1 %}1 file changed:{% else %}{{ files.len() }} files changed:{% endif %}</div>
+<table class="diff_tree">
+{% for f in files %}
+<tr class="{% if loop.index0 % 2 == 0 %}light{% else %}dark{% endif %}">
+<td><a class="list" href="{% if f.deleted %}/{{ repo }}/commitdiff/{{ c.id }}#{{ f.path|urlencode }}{% else %}/{{ repo }}/blob/{{ c.id }}/{{ f.path|urlencode }}{% endif %}">{{ f.path }}</a></td>
+<td>{% if !f.status_text.is_empty() %}<span class="file_status {{ f.status_class }}">[{{ f.status_text }}]</span>{% endif %}</td>
+<td class="link">{% if !f.deleted %}<a href="/{{ repo }}/blob/{{ c.id }}/{{ f.path|urlencode }}">blob</a> | {% endif %}<a href="/{{ repo }}/commitdiff/{{ c.id }}#{{ f.path|urlencode }}">diff</a> | <a href="/{{ repo }}/history/{{ c.id }}/{{ f.path|urlencode }}">history</a></td>
+</tr>
+{% endfor %}
+</table>
+{% endblock %}

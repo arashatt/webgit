@@ -1,0 +1,41 @@
+{% extends "repo_base.html" %}
+
+{#
+  active = "blame"
+  Fields:
+    path: String
+    path_parts: Vec<PathPart>      PathPart { name, path }, last item is the file
+    lines: Vec<BlameLine>
+      BlameLine { commit_id, short_id, summary, author, date, text, first, dark }
+      first: true on the first line of each blame hunk (the commit link shows only there)
+      dark:  alternate this per hunk to get the banded look
+#}
+
+{% block nav_extra %}
+<div class="page_nav">
+<a href="/{{ repo }}/commit/{{ rev|urlencode_strict }}">commit</a> |
+<a href="/{{ repo }}/blob/{{ rev|urlencode_strict }}/{{ path|urlencode }}">blob</a> |
+<a href="/{{ repo }}/history/{{ rev|urlencode_strict }}/{{ path|urlencode }}">history</a> |
+<a href="/{{ repo }}/raw/{{ rev|urlencode_strict }}/{{ path|urlencode }}">raw</a> |
+<a href="/{{ repo }}/blame/HEAD/{{ path|urlencode }}">HEAD</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="title">&nbsp;</div>
+<div class="page_path">
+<a href="/{{ repo }}/tree/{{ rev|urlencode_strict }}" title="tree root">[{{ repo }}]</a>{% for part in path_parts %} / {% if loop.last %}<a href="/{{ repo }}/blob/{{ rev|urlencode_strict }}/{{ part.path|urlencode }}">{{ part.name }}</a>{% else %}<a href="/{{ repo }}/tree/{{ rev|urlencode_strict }}/{{ part.path|urlencode }}">{{ part.name }}</a>{% endif %}{% endfor %}
+</div>
+<div class="page_body">
+<table class="blame">
+<tr><th>Commit</th><th>Line</th><th>Data</th></tr>
+{% for l in lines %}
+<tr id="l{{ loop.index }}" class="{% if l.dark %}dark{% else %}light{% endif %}">
+<td class="sha1">{% if l.first %}<a href="/{{ repo }}/commit/{{ l.commit_id }}" title="{{ l.summary }}, {{ l.author }}, {{ l.date }}">{{ l.short_id }}</a>{% endif %}</td>
+<td class="linenr"><a class="linenr" href="#l{{ loop.index }}">{{ loop.index }}</a></td>
+<td class="pre">{{ l.text }}</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+{% endblock %}

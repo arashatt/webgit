@@ -4,12 +4,26 @@
 //! cargo run -p example-form
 //! ```
 
-use axum::{extract::{Form,Path}, response::Html, routing::get, Router, http::StatusCode};
 use axum::response::IntoResponse;
+use axum::{
+    Router, ServiceExt,
+    extract::Request,
+    extract::{Form, Path},
+    http::StatusCode,
+    response::Html,
+    routing::get,
+};
+use git2::{DescribeFormatOptions, ErrorClass::Object, FileMode::Blob, Repository};
 use serde::Deserialize;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use git2::Repository;
 use askama::Template;
+mod git;
+mod html;
+use git::repository::Repository as Repo;
+use html::html::IndexTemplate;
+use tower_http::normalize_path::NormalizePathLayer;
+use tower_http::services::ServeDir;
+use tower_layer::Layer;
 
 #[tokio::main]
 async fn main() {
@@ -22,25 +36,27 @@ async fn main() {
         .init();
 
     // build our application with some routes
-    let app = app();
+    let app = NormalizePathLayer::trim_trailing_slash().layer(app());
 
     // run it
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
         .await
         .unwrap();
     tracing::debug!("listening on {}", listener.local_addr().unwrap());
-    axum::serve(listener, app).await;
+    axum::serve(listener, ServiceExt::<Request>::into_make_service(app))
+        .await
+        .unwrap();
 }
 
 fn app() -> Router {
     let git = Router::new()
-        .route("/{id}", get(git))
-        .route("/{id}/{*filepath}", get(file));
+        .route("/{id}", get(index))
+        .route("/{id}/{*filepath}", get(blob));
 
     Router::new()
-        .nest("/git",git)
+        .nest_service("/static/", ServeDir::new("static"))
+        .nest("/git", git)
         .route("/", get(show_form).post(accept_form))
-        
 }
 
 async fn show_form() -> Html<&'static str> {
@@ -81,36 +97,54 @@ async fn accept_form(Form(input): Form<Input>) -> Html<String> {
     Html(format!("email='{}'\nname='{}'\n", input.email, input.name))
 }
 use std::path::Path as OsPath;
-async fn git(Path(name): Path<String>)-> (StatusCode, Html<String>){
-    let path_template = format!("{}/{}",std::env::var("HOME").expect("Home variable doesn't exist"),name);
+async fn index(Path(name): Path<String>) -> (StatusCode, Html<String>) {
+    dbg!(&name);
+    let path_template = format!(
+        "{}/{}",
+        std::env::var("HOME").expect("Home variable doesn't exist"),
+        name
+    );
     let path = OsPath::new(&path_template);
-    let repo = match Repository::open(path){
+    let repo = match Repository::open(path) {
         Ok(repo) => repo,
-        Err(e) => {return (StatusCode::INTERNAL_SERVER_ERROR, Html(format!("Faild to Open repo")));},
+        Err(e) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Html(format!("Faild to Open repo")),
+            );
+        }
     };
-    let mut index: Vec<_> = repo.index().expect("Couldn't get the repo index").iter().collect();
+    let mut index: Vec<_> = repo
+        .index()
+        .expect("Couldn't get the repo index")
+        .iter()
+        .collect();
     dbg!(index.len());
-    let html_list: Vec<String> = index.into_iter().map(|item| {
-        String::from_utf8(item.path).unwrap()
-    }).collect();
+    let html_list: Vec<String> = index
+        .into_iter()
+        .map(|item| String::from_utf8(item.path).unwrap())
+        .collect();
     dbg!(&html_list);
 
-    #[derive(Template)]
-    #[template(path = "index.html")]
-    struct IndexTemplate {
-        files: Vec<String>
-    }
-    let x = IndexTemplate { files: html_list };
+    let x = IndexTemplate {
+        name: name.clone(),
+        entries: html_list,
+    };
     dbg!(&name);
-    (StatusCode::OK, Html( x.render().unwrap())) 
-
+    (StatusCode::OK, Html(x.render().unwrap()))
 }
 
-
-
-async fn file() -> impl IntoResponse{}
-
-
+async fn blob(Path((id, blob)): Path<(String, String)>) -> impl IntoResponse {
+    let repo = Repo::open(id).unwrap();
+    let tree = repo.tree().unwrap();
+    let object = tree.get_name(&blob).unwrap();
+    let id = object.id();
+    let blob = repo.repo.find_blob(id).unwrap();
+    dbg!(blob.content());
+    let content = String::from_utf8(blob.content().to_vec());
+    dbg!(repo.tree_iter());
+    content.unwrap()
+}
 
 #[cfg(test)]
 mod tests {

@@ -1,0 +1,302 @@
+/* gitweb-style stylesheet */
+
+body {
+	font-family: sans-serif;
+	font-size: small;
+	border: solid #d9d8d1;
+	border-width: 1px;
+	margin: 10px;
+	background-color: #ffffff;
+	color: #000000;
+}
+
+a { color: #0000cc; }
+a:hover, a:visited, a:active { color: #880000; }
+
+/* ---------- page chrome ---------- */
+
+div.page_header {
+	height: 25px;
+	padding: 8px;
+	font-size: 150%;
+	font-weight: bold;
+	background-color: #d9d8d1;
+}
+
+div.page_header a:visited, a.header { color: #0000cc; }
+div.page_header a:hover { color: #880000; }
+
+a.logo { float: right; line-height: 0; }
+a.logo svg { display: block; }
+
+div.page_nav { padding: 8px 8px 0; }
+div.page_nav + div.page_nav { padding-top: 6px; }
+div.page_nav a:visited { color: #0000cc; }
+div.page_nav_gap { height: 1.6em; }
+
+div.page_path {
+	padding: 8px;
+	font-weight: bold;
+	border: solid #d9d8d1;
+	border-width: 0px 0px 1px;
+}
+
+div.page_body {
+	padding: 8px;
+	font-family: monospace;
+}
+
+div.page_footer {
+	height: 17px;
+	padding: 4px 8px;
+	background-color: #d9d8d1;
+}
+
+div.page_footer_text {
+	float: left;
+	color: #555555;
+	font-style: italic;
+}
+
+div.search {
+	font-size: 100%;
+	font-weight: normal;
+	margin: 4px 8px;
+	float: right;
+}
+
+/* ---------- section titles ---------- */
+
+div.title, a.title {
+	display: block;
+	padding: 6px 8px;
+	font-weight: bold;
+	background-color: #edece6;
+	text-decoration: none;
+	color: #000000;
+}
+
+a.title:hover { background-color: #d9d8d1; }
+
+div.title_text {
+	padding: 6px 0px;
+	border: solid #d9d8d1;
+	border-width: 0px 0px 1px;
+	font-family: monospace;
+}
+
+div.list_head {
+	padding: 6px 8px 4px;
+	border: solid #d9d8d1;
+	border-width: 1px 0px 0px;
+	font-style: italic;
+}
+
+div.author_date {
+	padding: 8px;
+	border: solid #d9d8d1;
+	border-width: 0px 0px 1px 0px;
+	font-style: italic;
+}
+
+div.log_body { padding: 8px 8px 8px 150px; }
+
+span.age {
+	position: relative;
+	float: left;
+	width: 142px;
+	font-style: italic;
+}
+
+div.log_link {
+	padding: 0px 8px;
+	font-size: 70%;
+	font-family: sans-serif;
+	font-style: normal;
+	position: relative;
+	float: left;
+	width: 136px;
+}
+
+div.readme { padding: 8px; }
+
+/* ---------- links ---------- */
+
+a.list { text-decoration: none; color: #000000; }
+a.list:hover { text-decoration: underline; color: #880000; }
+
+a.subject, a.name { font-weight: bold; }
+table.tags a.subject { font-weight: normal; }
+
+a.text { text-decoration: none; color: #0000cc; }
+a.text:visited { text-decoration: none; color: #880000; }
+a.text:hover { text-decoration: underline; color: #880000; }
+
+.linenr, a.linenr { color: #999999; text-decoration: none; }
+
+/* ---------- tables ---------- */
+
+table { padding: 8px 4px; border-spacing: 0; }
+
+th { padding: 2px 5px; font-size: 100%; text-align: left; }
+th.num, td.num { text-align: right; }
+
+td { padding: 2px 5px; font-size: 100%; vertical-align: top; }
+
+td.link, td.selflink {
+	padding: 2px 5px;
+	font-family: sans-serif;
+	font-size: 70%;
+	white-space: nowrap;
+}
+td.selflink { padding-right: 0px; }
+
+td.sha1 { font-family: monospace; }
+td.current_head { text-decoration: underline; }
+
+tr.light { background-color: #ffffff; }
+tr.dark  { background-color: #f6f6f0; }
+tr.light:hover, tr.dark:hover { background-color: #edece6; }
+
+table.diff_tree { font-family: monospace; }
+table.diff_tree span.file_status.new { color: #008000; }
+table.diff_tree span.file_status.deleted { color: #c00000; }
+table.diff_tree span.file_status.moved,
+table.diff_tree span.file_status.mode_chng { color: #777777; }
+table.diff_tree span.file_status.copied { color: #70a070; }
+
+/* project list ages */
+table.project_list td.noage { color: #cccc77; font-style: italic; }
+table.project_list td.age2 { font-style: italic; }
+table.project_list td.age1,
+table.project_list td.age0 { color: #009900; font-style: italic; font-weight: bold; }
+
+table.blame { border-collapse: collapse; }
+table.blame td { padding: 0px 5px; vertical-align: top; }
+
+/* ---------- ref labels (heads, tags, remotes) ---------- */
+
+span.refs span {
+	padding: 0px 4px;
+	font-size: 70%;
+	font-weight: normal;
+	border: 1px solid;
+	background-color: #ffaaff;
+	border-color: #ffccff #ff00ee #ff00ee #ffccff;
+}
+span.refs span a { text-decoration: none; color: inherit; }
+span.refs span a:hover { text-decoration: underline; }
+span.refs span.indirect { font-style: italic; }
+span.refs span.ref  { background-color: #aaaaff; border-color: #ccccff #0033cc #0033cc #ccccff; }
+span.refs span.tag  { background-color: #ffffaa; border-color: #ffffcc #ffee00 #ffee00 #ffffcc; }
+span.refs span.head { background-color: #aaffaa; border-color: #ccffcc #00cc33 #00cc33 #ccffcc; }
+
+/* ---------- diffs ---------- */
+
+div.diff.header, div.diff.extended_header { white-space: normal; }
+
+div.diff.header {
+	font-weight: bold;
+	background-color: #edece6;
+	margin-top: 4px;
+	padding: 4px 0px 2px 0px;
+	border: solid #d9d8d1;
+	border-width: 1px 0px 1px 0px;
+}
+div.diff.header a.path { text-decoration: none; }
+
+div.diff.extended_header { background-color: #f6f5ee; padding: 2px 0px 2px 0px; }
+div.diff.extended_header,
+div.diff.extended_header a.path,
+div.diff.extended_header a.hash { color: #777777; }
+div.diff.extended_header .info { color: #b0b0b0; }
+
+div.diff a.list { text-decoration: none; }
+
+div.diff.from_file, div.diff.from_file a.path { color: #aa0000; }
+div.diff.to_file,   div.diff.to_file a.path   { color: #007000; }
+div.diff.add { color: #008800; }
+div.diff.rem { color: #cc0000; }
+
+div.diff.chunk_header, div.diff.chunk_header a { color: #990099; }
+div.diff.chunk_header {
+	border: dotted #ffe0ff;
+	border-width: 1px 0px 0px 0px;
+	margin-top: 2px;
+}
+div.diff.chunk_header .section { color: #aa22aa; }
+
+div.diff.incomplete { color: #cccccc; }
+div.diff.nodifferences { font-weight: bold; color: #600000; }
+
+/* ---------- misc ---------- */
+
+span.cntrl {
+	border: dashed #aaaaaa;
+	border-width: 1px;
+	padding: 0px 2px 0px 2px;
+	margin: 0px 2px 0px 2px;
+}
+
+span.atnight { color: #cc0000; }
+span.signoff { color: #888888; }
+
+.error { color: red; background-color: yellow; }
+
+a.rss_logo {
+	float: right;
+	margin-left: 4px;
+	padding: 3px 0px;
+	width: 35px;
+	line-height: 10px;
+	border: 1px solid;
+	border-color: #fcc7a5 #7d3302 #3e1a01 #ff954e;
+	color: #ffffff;
+	background-color: #ff6600;
+	font-weight: bold;
+	font-family: sans-serif;
+	font-size: 70%;
+	text-align: center;
+	text-decoration: none;
+}
+a.rss_logo:visited, a.rss_logo:active { color: #ffffff; }
+a.rss_logo:hover { background-color: #ee5500; color: #ffffff; }
+
+@media (max-width: 600px) {
+	div.page_header { height: auto; }
+	div.log_body { padding-left: 8px; }
+	span.age, div.log_link { float: none; width: auto; }
+	table { display: block; overflow-x: auto; }
+}
+
+/* ---------- additions for commit, tree, blob and blame pages ---------- */
+
+div.commit_message, div.log_body, div.readme { white-space: pre-wrap; }
+
+table.object_header td { padding: 1px 5px; }
+
+td.mode, td.size { font-family: monospace; }
+td.size { text-align: right; }
+
+div.pre {
+	font-family: monospace;
+	font-size: 12px;
+	white-space: pre;
+}
+
+a.linenr {
+	display: inline-block;
+	min-width: 4ch;
+	text-align: right;
+}
+
+div.diff { font-family: monospace; white-space: pre; }
+div.patchset { overflow-x: auto; }
+
+table.blame td.pre {
+	font-family: monospace;
+	font-size: 12px;
+	white-space: pre;
+}
+table.blame td.linenr { text-align: right; }
+table.blame td.sha1 { white-space: nowrap; }

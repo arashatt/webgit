@@ -1,0 +1,39 @@
+{% extends "repo_base.html" %}
+
+{#
+  active = "search"
+  Fields:
+    search_type: String        commit | author | committer | pickaxe
+    search_text: String
+    results: Vec<CommitRow>
+    next_page: Option<usize>
+#}
+
+{% block nav_extra %}
+{% if let Some(n) = next_page %}
+<div class="page_nav">
+<a href="?st={{ search_type|urlencode }}&amp;s={{ search_text|urlencode }}&amp;h={{ rev|urlencode_strict }}&amp;page={{ n }}">next</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="title">Search ({{ search_type }}): {{ search_text }}</div>
+{% if results.is_empty() %}
+<div class="page_body">No match found.</div>
+{% else %}
+<table class="shortlog">
+{% for c in results %}
+<tr class="{% if loop.index0 % 2 == 0 %}light{% else %}dark{% endif %}">
+<td title="{{ c.date }}"><i>{{ c.age }}</i></td>
+<td><i>{{ c.author }}</i></td>
+<td><a class="list subject" href="/{{ repo }}/commit/{{ c.id }}">{{ c.subject }}</a>{% for r in c.refs %} <span class="refs"><span class="{{ r.kind }}">{{ r.name }}</span></span>{% endfor %}</td>
+<td class="link"><a href="/{{ repo }}/commit/{{ c.id }}">commit</a> | <a href="/{{ repo }}/commitdiff/{{ c.id }}">commitdiff</a> | <a href="/{{ repo }}/tree/{{ c.id }}">tree</a></td>
+</tr>
+{% endfor %}
+{% if let Some(n) = next_page %}
+<tr><td colspan="4"><a href="?st={{ search_type|urlencode }}&amp;s={{ search_text|urlencode }}&amp;h={{ rev|urlencode_strict }}&amp;page={{ n }}">next</a></td></tr>
+{% endif %}
+</table>
+{% endif %}
+{% endblock %}

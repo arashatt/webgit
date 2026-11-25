@@ -1,0 +1,22 @@
+{% extends "repo_base.html" %}
+
+{#
+  active = "heads"
+  Fields:
+    heads: Vec<HeadRow>
+      HeadRow { name, age, subject, current: bool }
+#}
+
+{% block content %}
+<div class="title">&nbsp;</div>
+<table class="heads">
+{% for h in heads %}
+<tr class="{% if loop.index0 % 2 == 0 %}light{% else %}dark{% endif %}">
+<td><i>{{ h.age }}</i></td>
+<td class="{% if h.current %}current_head{% endif %}"><a class="list name" href="/{{ repo }}/shortlog/{{ h.name|urlencode_strict }}">{{ h.name }}</a></td>
+<td><a class="list subject" href="/{{ repo }}/shortlog/{{ h.name|urlencode_strict }}">{{ h.subject }}</a></td>
+<td class="link"><a href="/{{ repo }}/shortlog/{{ h.name|urlencode_strict }}">shortlog</a> | <a href="/{{ repo }}/log/{{ h.name|urlencode_strict }}">log</a> | <a href="/{{ repo }}/tree/{{ h.name|urlencode_strict }}">tree</a></td>
+</tr>
+{% endfor %}
+</table>
+{% endblock %}

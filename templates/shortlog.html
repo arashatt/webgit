@@ -1,0 +1,33 @@
+{% extends "repo_base.html" %}
+
+{#
+  active = "shortlog"
+  Fields:
+    commits: Vec<CommitRow>
+    prev_page: Option<usize>, next_page: Option<usize>
+  Also used for path-limited history: just pass the filtered commit list.
+#}
+
+{% block nav_extra %}
+<div class="page_nav">
+{% if let Some(p) = prev_page %}<a href="?page=0">first</a> &sdot; <a href="?page={{ p }}">prev</a>{% else %}first &sdot; prev{% endif %} &sdot;
+{% if let Some(n) = next_page %}<a href="?page={{ n }}">next</a>{% else %}next{% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="title">&nbsp;</div>
+<table class="shortlog">
+{% for c in commits %}
+<tr class="{% if loop.index0 % 2 == 0 %}light{% else %}dark{% endif %}">
+<td title="{{ c.date }}"><i>{{ c.age }}</i></td>
+<td><i>{{ c.author }}</i></td>
+<td><a class="list subject" href="/{{ repo }}/commit/{{ c.id }}">{{ c.subject }}</a>{% for r in c.refs %} <span class="refs"><span class="{{ r.kind }}">{{ r.name }}</span></span>{% endfor %}</td>
+<td class="link"><a href="/{{ repo }}/commit/{{ c.id }}">commit</a> | <a href="/{{ repo }}/commitdiff/{{ c.id }}">commitdiff</a> | <a href="/{{ repo }}/tree/{{ c.id }}">tree</a> | <a href="/{{ repo }}/snapshot/{{ c.id }}">snapshot</a></td>
+</tr>
+{% endfor %}
+{% if let Some(n) = next_page %}
+<tr><td colspan="4"><a href="?page={{ n }}">next</a></td></tr>
+{% endif %}
+</table>
+{% endblock %}

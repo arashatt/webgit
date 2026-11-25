@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{#
+  Every page that extends this template needs these fields:
+    repo: String          e.g. "linux.git"
+    rev: String           ref or commit id used by the commit/commitdiff/tree tabs
+    active: &'static str  summary | shortlog | log | commit | commitdiff | tree
+                          | tag | tags | heads | blob | blame | search
+    description: String   shown in the footer
+  Pages can add a second nav row by overriding the `nav_extra` block.
+#}
+
+{% block title %}{{ repo }} - {{ active }}{% endblock %}
+
+{% block head %}
+<link rel="alternate" type="application/atom+xml" title="{{ repo }} Atom feed" href="/{{ repo }}/atom">
+<link rel="alternate" type="application/rss+xml" title="{{ repo }} RSS feed" href="/{{ repo }}/rss">
+{% endblock %}
+
+{% block breadcrumb %}<a href="/">projects</a> / <a href="/{{ repo }}/summary">{{ repo }}</a> / {{ active }}{% endblock %}
+
+{% block search %}
+<form method="get" action="/{{ repo }}/search">
+<div class="search">
+<input type="hidden" name="h" value="{{ rev }}">
+<select name="st">
+<option value="commit">commit</option>
+<option value="author">author</option>
+<option value="committer">committer</option>
+<option value="pickaxe">pickaxe</option>
+</select>
+<span title="search help">?</span> search:
+<input type="text" name="s">
+</div>
+</form>
+{% endblock %}
+
+{% block page_nav %}
+<div class="page_nav">
+{% if active == "summary" %}summary{% else %}<a href="/{{ repo }}/summary">summary</a>{% endif %} |
+{% if active == "shortlog" %}shortlog{% else %}<a href="/{{ repo }}/shortlog">shortlog</a>{% endif %} |
+{% if active == "log" %}log{% else %}<a href="/{{ repo }}/log">log</a>{% endif %} |
+{% if active == "commit" %}commit{% else %}<a href="/{{ repo }}/commit/{{ rev|urlencode_strict }}">commit</a>{% endif %} |
+{% if active == "commitdiff" %}commitdiff{% else %}<a href="/{{ repo }}/commitdiff/{{ rev|urlencode_strict }}">commitdiff</a>{% endif %} |
+{% if active == "tree" %}tree{% else %}<a href="/{{ repo }}/tree/{{ rev|urlencode_strict }}">tree</a>{% endif %}
+</div>
+{% endblock %}
+
+{% block footer %}
+<div class="page_footer_text">{{ description }}</div>
+<a class="rss_logo" href="/{{ repo }}/atom">Atom</a>
+<a class="rss_logo" href="/{{ repo }}/rss">RSS</a>
+{% endblock %}

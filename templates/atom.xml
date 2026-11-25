@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+{#
+  Fields:
+    repo: String, description: String
+    base_url: String          e.g. "https://git.example.com" (no trailing slash)
+    updated: String           RFC 3339 timestamp of the newest commit
+    entries: Vec<FeedEntry>
+      FeedEntry { id, subject, body, author_name, author_email, date_rfc3339, date_rfc2822 }
+  Serve with Content-Type: application/atom+xml; charset=utf-8
+#}
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+<title>{{ repo }}</title>
+<subtitle>{{ description }}</subtitle>
+<link rel="self" href="{{ base_url }}/{{ repo }}/atom"/>
+<link rel="alternate" type="text/html" href="{{ base_url }}/{{ repo }}/summary"/>
+<id>{{ base_url }}/{{ repo }}/atom</id>
+<updated>{{ updated }}</updated>
+{% for e in entries %}
+<entry>
+<title>{{ e.subject }}</title>
+<updated>{{ e.date_rfc3339 }}</updated>
+<published>{{ e.date_rfc3339 }}</published>
+<author>
+<name>{{ e.author_name }}</name>
+<email>{{ e.author_email }}</email>
+</author>
+<link rel="alternate" type="text/html" href="{{ base_url }}/{{ repo }}/commit/{{ e.id }}"/>
+<id>{{ base_url }}/{{ repo }}/commit/{{ e.id }}</id>
+<content type="text">{{ e.body }}</content>
+</entry>
+{% endfor %}
+</feed>

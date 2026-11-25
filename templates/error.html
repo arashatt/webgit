@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{#
+  Fields:
+    status: u16        e.g. 404
+    message: String    e.g. "No such project"
+#}
+
+{% block title %}{{ status }} - {{ message }}{% endblock %}
+
+{% block content %}
+<div class="page_body"><br/><br/>{{ status }} - {{ message }}<br/></div>
+{% endblock %}

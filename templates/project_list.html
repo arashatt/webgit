@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{#
+  Fields:
+    query: String
+    projects: Vec<ProjectRow>
+      ProjectRow { name, description, owner, age, age_class }
+      age_class is one of: age0 | age1 | age2 | noage
+#}
+
+{% block title %}projects{% endblock %}
+
+{% block breadcrumb %}projects{% endblock %}
+
+{% block search %}
+<form method="get" action="/">
+<div class="search">
+Search: <input type="text" name="s" value="{{ query }}">
+</div>
+</form>
+{% endblock %}
+
+{% block content %}
+<table class="project_list">
+<tr>
+<th>Project</th>
+<th>Description</th>
+<th>Owner</th>
+<th>Last Change</th>
+<th></th>
+</tr>
+{% for p in projects %}
+<tr class="{% if loop.index0 % 2 == 0 %}light{% else %}dark{% endif %}">
+<td><a class="list" href="/{{ p.name|urlencode }}/summary" title="{{ p.name }} summary">{{ p.name }}</a></td>
+<td><a class="list" href="/{{ p.name|urlencode }}/summary" title="{{ p.name }} summary">{{ p.description }}</a></td>
+<td><i>{{ p.owner }}</i></td>
+<td class="{{ p.age_class }}">{{ p.age }}</td>
+<td class="link"><a href="/{{ p.name|urlencode }}/summary">summary</a> | <a href="/{{ p.name|urlencode }}/shortlog">shortlog</a> | <a href="/{{ p.name|urlencode }}/log">log</a> | <a href="/{{ p.name|urlencode }}/tree/HEAD">tree</a></td>
+</tr>
+{% endfor %}
+</table>
+{% endblock %}

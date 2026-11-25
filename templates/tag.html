@@ -1,0 +1,23 @@
+{% extends "repo_base.html" %}
+
+{#
+  active = "tag", rev = the tagged commit id
+  Fields:
+    tag: TagDetail { name, target_id, tagger_name, tagger_email, date, message }
+#}
+
+{% block content %}
+<a class="title" href="/{{ repo }}/commit/{{ tag.target_id }}">{{ tag.name }}</a>
+<div class="title_text">
+<table class="object_header">
+<tr><td>object</td><td class="sha1"><a class="list" href="/{{ repo }}/commit/{{ tag.target_id }}">{{ tag.target_id }}</a></td><td class="link"><a href="/{{ repo }}/commit/{{ tag.target_id }}">commit</a></td></tr>
+{% if !tag.tagger_name.is_empty() %}
+<tr><td>tagger</td><td>{{ tag.tagger_name }} &lt;{{ tag.tagger_email }}&gt;</td></tr>
+<tr><td></td><td>{{ tag.date }}</td></tr>
+{% endif %}
+</table>
+</div>
+<div class="page_body">
+<div class="commit_message">{{ tag.message }}</div>
+</div>
+{% endblock %}

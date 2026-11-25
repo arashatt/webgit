@@ -1,0 +1,65 @@
+{% extends "repo_base.html" %}
+
+{#
+  active = "commitdiff", rev = c.id
+  Fields:
+    c: CommitDetail        (same struct as commit.html)
+    files: Vec<ChangedFile> (same as commit.html)
+    patches: Vec<DiffFile>
+      DiffFile { path, header, extended: Vec<String>, binary: bool,
+                 from_label, to_label, hunks: Vec<Hunk> }
+        header:     "diff --git a/x b/x"
+        extended:   ["new file mode 100644", "index 0000000..abc1234"]
+        from_label: "a/x" or "/dev/null"      to_label: "b/x" or "/dev/null"
+      Hunk { header, section, lines: Vec<DiffLine> }
+        header:  "@@ -1,3 +1,4 @@"            section: text after the second @@ (may be empty)
+      DiffLine { kind, text }
+        kind: add | rem | ctx                  text includes the leading + - or space
+#}
+
+{% block nav_extra %}
+<div class="page_nav">
+<a href="/{{ repo }}/commitdiff_plain/{{ c.id }}">raw</a> | <a href="/{{ repo }}/patch/{{ c.id }}">patch</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<a class="title" href="/{{ repo }}/commit/{{ c.id }}">{{ c.subject }}{% for r in c.refs %} <span class="refs"><span class="{{ r.kind }}">{{ r.name }}</span></span>{% endfor %}</a>
+<div class="author_date">{{ c.author_name }} [{{ c.author_date }}]</div>
+
+<div class="page_body">
+<div class="commit_message">{{ c.body }}</div>
+</div>
+
+<div class="list_head">{% if files.len() == 1 %}1 file changed:{% else %}{{ files.len() }} files changed:{% endif %}</div>
+<table class="diff_tree">
+{% for f in files %}
+<tr class="{% if loop.index0 % 2 == 0 %}light{% else %}dark{% endif %}">
+<td><a class="list" href="#{{ f.path|urlencode }}">{{ f.path }}</a></td>
+<td>{% if !f.status_text.is_empty() %}<span class="file_status {{ f.status_class }}">[{{ f.status_text }}]</span>{% endif %}</td>
+<td class="link">{% if !f.deleted %}<a href="/{{ repo }}/blob/{{ c.id }}/{{ f.path|urlencode }}">blob</a> | {% endif %}<a href="#{{ f.path|urlencode }}">diff</a> | <a href="/{{ repo }}/history/{{ c.id }}/{{ f.path|urlencode }}">history</a></td>
+</tr>
+{% endfor %}
+</table>
+
+<div class="patchset">
+{% for p in patches %}
+<div class="patch" id="{{ p.path }}">
+<div class="diff header">{{ p.header }}</div>
+{% if !p.extended.is_empty() %}
+<div class="diff extended_header">{% for l in p.extended %}{{ l }}<br/>{% endfor %}</div>
+{% endif %}
+{% if p.binary %}
+<div class="diff nodifferences">Binary files differ</div>
+{% else %}
+<div class="diff from_file">--- {{ p.from_label }}</div>
+<div class="diff to_file">+++ {{ p.to_label }}</div>
+{% for h in p.hunks %}
+<div class="diff chunk_header"><span class="chunk_info">{{ h.header }}</span>{% if !h.section.is_empty() %} <span class="section">{{ h.section }}</span>{% endif %}</div>
+{% for l in h.lines %}<div class="diff {{ l.kind }}">{{ l.text }}</div>{% endfor %}
+{% endfor %}
+{% endif %}
+</div>
+{% endfor %}
+</div>
+{% endblock %}

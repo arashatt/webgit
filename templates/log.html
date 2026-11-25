@@ -1,0 +1,33 @@
+{% extends "repo_base.html" %}
+
+{#
+  active = "log"
+  Fields:
+    commits: Vec<LogEntry>
+      LogEntry { id, age, date, author, subject, body, refs: Vec<RefLabel> }
+      body is the message without its first line
+    prev_page: Option<usize>, next_page: Option<usize>
+#}
+
+{% block nav_extra %}
+<div class="page_nav">
+{% if let Some(p) = prev_page %}<a href="?page=0">first</a> &sdot; <a href="?page={{ p }}">prev</a>{% else %}first &sdot; prev{% endif %} &sdot;
+{% if let Some(n) = next_page %}<a href="?page={{ n }}">next</a>{% else %}next{% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+{% for c in commits %}
+<div>
+<a class="title" href="/{{ repo }}/commit/{{ c.id }}"><span class="age">{{ c.age }}</span>{{ c.subject }}{% for r in c.refs %} <span class="refs"><span class="{{ r.kind }}">{{ r.name }}</span></span>{% endfor %}</a>
+</div>
+<div class="title_text">
+<div class="log_link"><a href="/{{ repo }}/commit/{{ c.id }}">commit</a> | <a href="/{{ repo }}/commitdiff/{{ c.id }}">commitdiff</a> | <a href="/{{ repo }}/tree/{{ c.id }}">tree</a><br/></div>
+<i>{{ c.author }} [{{ c.date }}]</i><br/>
+</div>
+<div class="log_body">{{ c.body }}</div>
+{% endfor %}
+{% if let Some(n) = next_page %}
+<div class="page_nav"><a href="?page={{ n }}">next</a></div>
+{% endif %}
+{% endblock %}

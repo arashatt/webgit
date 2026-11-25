@@ -1,0 +1,40 @@
+{% extends "repo_base.html" %}
+
+{#
+  active = "blob"
+  Fields:
+    path: String                   full file path
+    path_parts: Vec<PathPart>      PathPart { name, path }, last item is the file itself
+    blob_id: String
+    size: String                   pre-formatted, e.g. "12.4 KiB"
+    binary: bool
+    truncated: bool                true if `lines` was cut because the file is large
+    lines: Vec<String>             empty when binary
+#}
+
+{% block nav_extra %}
+<div class="page_nav">
+<a href="/{{ repo }}/commit/{{ rev|urlencode_strict }}">commit</a> |
+<a href="/{{ repo }}/blame/{{ rev|urlencode_strict }}/{{ path|urlencode }}">blame</a> |
+<a href="/{{ repo }}/history/{{ rev|urlencode_strict }}/{{ path|urlencode }}">history</a> |
+<a href="/{{ repo }}/raw/{{ rev|urlencode_strict }}/{{ path|urlencode }}">raw</a> |
+<a href="/{{ repo }}/blob/HEAD/{{ path|urlencode }}">HEAD</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="title">{{ blob_id }}</div>
+<div class="page_path">
+<a href="/{{ repo }}/tree/{{ rev|urlencode_strict }}" title="tree root">[{{ repo }}]</a>{% for part in path_parts %} / {% if loop.last %}<a href="/{{ repo }}/blob/{{ rev|urlencode_strict }}/{{ part.path|urlencode }}">{{ part.name }}</a>{% else %}<a href="/{{ repo }}/tree/{{ rev|urlencode_strict }}/{{ part.path|urlencode }}">{{ part.name }}</a>{% endif %}{% endfor %}
+</div>
+<div class="page_body">
+{% if binary %}
+<div class="pre">Binary file ({{ size }}) &mdash; <a href="/{{ repo }}/raw/{{ rev|urlencode_strict }}/{{ path|urlencode }}">download raw</a></div>
+{% else %}
+{% for line in lines %}<div class="pre"><a id="l{{ loop.index }}" href="#l{{ loop.index }}" class="linenr">{{ loop.index }}</a> {{ line }}</div>{% endfor %}
+{% if truncated %}
+<div class="pre">... file truncated ({{ size }}) &mdash; <a href="/{{ repo }}/raw/{{ rev|urlencode_strict }}/{{ path|urlencode }}">view raw</a></div>
+{% endif %}
+{% endif %}
+</div>
+{% endblock %}
