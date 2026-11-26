@@ -13,14 +13,14 @@ use axum::{
     response::Html,
     routing::get,
 };
-use git2::{DescribeFormatOptions, ErrorClass::Object, FileMode::Blob, Repository};
+use git2::Repository;
 use serde::Deserialize;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use askama::Template;
 mod git;
 mod html;
 use git::repository::Repository as Repo;
-use html::html::IndexTemplate;
+use html::html::{RepoBase,Tree};
 use tower_http::normalize_path::NormalizePathLayer;
 use tower_http::services::ServeDir;
 use tower_layer::Layer;
@@ -107,14 +107,14 @@ async fn index(Path(name): Path<String>) -> (StatusCode, Html<String>) {
     let path = OsPath::new(&path_template);
     let repo = match Repository::open(path) {
         Ok(repo) => repo,
-        Err(e) => {
+        Err(_e) => {
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Html(format!("Faild to Open repo")),
             );
         }
     };
-    let mut index: Vec<_> = repo
+    let index: Vec<_> = repo
         .index()
         .expect("Couldn't get the repo index")
         .iter()
@@ -126,9 +126,15 @@ async fn index(Path(name): Path<String>) -> (StatusCode, Html<String>) {
         .collect();
     dbg!(&html_list);
 
-    let x = IndexTemplate {
-        name: name.clone(),
-        entries: html_list,
+    let x = Tree{
+        base:  RepoBase{repo: "".to_owned(),
+                        rev: "".to_owned(),
+                        active: "tree",
+                        description: "".to_owned(),
+                        },
+        path_parts: vec!(),
+        parent_path: None,
+        entries: vec!(),
     };
     dbg!(&name);
     (StatusCode::OK, Html(x.render().unwrap()))
