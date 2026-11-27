@@ -2,41 +2,56 @@
 
 {#
   Fields:
-    query: String
-    projects: Vec<ProjectRow>
-      ProjectRow { name, description, owner, age, age_class }
-      age_class is one of: age0 | age1 | age2 | noage
+    title: String            e.g. "Git repository browser"
+    subtitle: String         shown under the title
+    query: String            current search text
+    groups: Vec<RepoGroup>   RepoGroup { name, repos: Vec<RepoRow> }
+                             name may be "" (no section heading row)
+      RepoRow { name, description, owner, idle, age_class, sublevel: bool }
+      age_class: age-mins | age-hours | age-days | age-weeks | age-months | age-years
 #}
 
-{% block title %}projects{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 
-{% block breadcrumb %}projects{% endblock %}
+{% block header %}
+<table id="header">
+<tr>
+<td class="logo" rowspan="2"><a href="/">{% include "logo.html" %}</a></td>
+<td class="main">{{ title }}</td>
+</tr>
+<tr><td class="sub">{{ subtitle }}</td></tr>
+</table>
+{% endblock %}
 
-{% block search %}
-<form method="get" action="/">
-<div class="search">
-Search: <input type="text" name="s" value="{{ query }}">
-</div>
-</form>
+{% block tabs %}
+<table class="tabs"><tr><td>
+<a class="active" href="/">Index</a>
+</td><td class="form"><form class="right" method="get" action="/">
+<input class="txt" type="search" size="10" name="q" value="{{ query }}">
+<input type="submit" value="search">
+</form></td></tr></table>
 {% endblock %}
 
 {% block content %}
-<table class="project_list">
+<table class="list nowrap">
+<tr class="nohover">
+<th class="left"><a class="button" href="/?s=name">Name</a></th>
+<th class="left"><a class="button" href="/?s=info">Description</a></th>
+<th class="left"><a class="button" href="/?s=owner">Owner</a></th>
+<th class="left"><a class="button" href="/?s=idle">Idle</a></th>
+</tr>
+{% for g in groups %}
+{% if !g.name.is_empty() %}
+<tr class="nohover"><td colspan="4" class="reposection">{{ g.name }}</td></tr>
+{% endif %}
+{% for r in g.repos %}
 <tr>
-<th>Project</th>
-<th>Description</th>
-<th>Owner</th>
-<th>Last Change</th>
-<th></th>
+<td class="{% if r.sublevel %}sublevel-repo{% else %}toplevel-repo{% endif %}"><a title="{{ r.name }}" href="/{{ r.name|urlencode }}/">{{ r.name }}</a></td>
+<td><a href="/{{ r.name|urlencode }}/">{{ r.description }}</a></td>
+<td>{{ r.owner }}</td>
+<td><span class="{{ r.age_class }}">{{ r.idle }}</span></td>
 </tr>
-{% for p in projects %}
-<tr class="{% if loop.index0 % 2 == 0 %}light{% else %}dark{% endif %}">
-<td><a class="list" href="/{{ p.name|urlencode }}/summary" title="{{ p.name }} summary">{{ p.name }}</a></td>
-<td><a class="list" href="/{{ p.name|urlencode }}/summary" title="{{ p.name }} summary">{{ p.description }}</a></td>
-<td><i>{{ p.owner }}</i></td>
-<td class="{{ p.age_class }}">{{ p.age }}</td>
-<td class="link"><a href="/{{ p.name|urlencode }}/summary">summary</a> | <a href="/{{ p.name|urlencode }}/shortlog">shortlog</a> | <a href="/{{ p.name|urlencode }}/log">log</a> | <a href="/{{ p.name|urlencode }}/tree/HEAD">tree</a></td>
-</tr>
+{% endfor %}
 {% endfor %}
 </table>
 {% endblock %}

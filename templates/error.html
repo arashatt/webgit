@@ -3,11 +3,21 @@
 {#
   Fields:
     status: u16        e.g. 404
-    message: String    e.g. "No such project"
+    message: String    e.g. "No such repository"
 #}
 
-{% block title %}{{ status }} - {{ message }}{% endblock %}
+{% block title %}{{ status }} {{ message }}{% endblock %}
+
+{% block header %}
+<table id="header">
+<tr>
+<td class="logo" rowspan="2"><a href="/">{% include "logo.html" %}</a></td>
+<td class="main"><a href="/">index</a></td>
+</tr>
+<tr><td class="sub"></td></tr>
+</table>
+{% endblock %}
 
 {% block content %}
-<div class="page_body"><br/><br/>{{ status }} - {{ message }}<br/></div>
+<div class="error">{{ status }} - {{ message }}</div>
 {% endblock %}

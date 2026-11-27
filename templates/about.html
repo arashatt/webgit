@@ -1,0 +1,14 @@
+{% extends "repo_base.html" %}
+
+{#
+  active = "about"
+  Fields:
+    readme_html: String
+      ALREADY-SANITIZED html. It is printed with |safe, so never pass raw repository
+      content. For example: render markdown with raw html disabled, then run the
+      result through the ammonia crate.
+#}
+
+{% block content %}
+<div id="summary">{{ readme_html|safe }}</div>
+{% endblock %}

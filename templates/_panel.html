@@ -1,0 +1,27 @@
+<div class="cgit-panel">
+<form method="get">
+<input type="hidden" name="h" value="{{ head }}">
+<input type="hidden" name="id" value="{{ opts.id }}">
+{% if !opts.id2.is_empty() %}<input type="hidden" name="id2" value="{{ opts.id2 }}">{% endif %}
+<table>
+<tr><td colspan="2"></td></tr>
+<tr><td class="label">context:</td><td class="ctrl"><select name="context" onchange="this.form.submit();">
+<option value="1"{% if opts.ctx_lines == 1 %} selected{% endif %}>1</option>
+<option value="3"{% if opts.ctx_lines == 3 %} selected{% endif %}>3</option>
+<option value="5"{% if opts.ctx_lines == 5 %} selected{% endif %}>5</option>
+<option value="10"{% if opts.ctx_lines == 10 %} selected{% endif %}>10</option>
+<option value="20"{% if opts.ctx_lines == 20 %} selected{% endif %}>20</option>
+<option value="40"{% if opts.ctx_lines == 40 %} selected{% endif %}>40</option>
+</select></td></tr>
+<tr><td class="label">space:</td><td class="ctrl"><select name="ss" onchange="this.form.submit();">
+<option value="include"{% if !opts.ignore_ws %} selected{% endif %}>include</option>
+<option value="ignore"{% if opts.ignore_ws %} selected{% endif %}>ignore</option>
+</select></td></tr>
+<tr><td class="label">mode:</td><td class="ctrl"><select name="dt" onchange="this.form.submit();">
+<option value="0"{% if !opts.stat_only %} selected{% endif %}>unified</option>
+<option value="2"{% if opts.stat_only %} selected{% endif %}>stat only</option>
+</select></td></tr>
+<tr><td></td><td class="ctrl"><noscript><input type="submit" value="reload"></noscript></td></tr>
+</table>
+</form>
+</div>

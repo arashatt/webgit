@@ -3,37 +3,37 @@
 {#
   active = "tree"
   Fields:
-    path_parts: Vec<PathPart>      PathPart { name, path }   empty at the repo root
-    parent_path: Option<String>    None at the root, Some("") for a top-level dir, else the parent dir path
+    path: String                   current directory, "" at the root
+    path_parts: Vec<PathPart>      PathPart { name, path }, empty at the root
+    parent_path: Option<String>    None at the root, Some("") for a top-level dir, else the parent dir
     entries: Vec<TreeEntry>
-      TreeEntry { name, path, mode, size, is_dir }
-      mode: "drwxr-xr-x" / "-rw-r--r--" / "lrwxrwxrwx"
-      size: pre-formatted string, empty for directories
+      TreeEntry { name, path, mode, size, is_dir, is_submodule }
+      mode: "d---------" / "-rw-r--r--" / "lrwxrwxrwx"; size: pre-formatted, "" for directories
+    show_blame: bool               show the blame button on files
 #}
 
+{% block path_bar %}
+<div class="path">path: <a href="/{{ repo }}/tree/?h={{ head|urlencode_strict }}">root</a>{% for part in path_parts %}/<a href="/{{ repo }}/tree/{{ part.path|urlencode }}?h={{ head|urlencode_strict }}">{{ part.name }}</a>{% endfor %} (<a href="/{{ repo }}/plain/{{ path|urlencode }}?h={{ head|urlencode_strict }}">plain</a>)</div>
+{% endblock %}
+
 {% block content %}
-<div class="title">&nbsp;</div>
-<div class="page_path">
-<a href="/{{ repo }}/tree/{{ rev|urlencode_strict }}" title="tree root">[{{ repo }}]</a>{% for part in path_parts %} / <a href="/{{ repo }}/tree/{{ rev|urlencode_strict }}/{{ part.path|urlencode }}">{{ part.name }}</a>{% endfor %} /
-</div>
-<div class="page_body">
-<table class="tree">
+<table class="list nowrap">
+<tr class="nohover"><th class="left">Mode</th><th class="left">Name</th><th class="right">Size</th><th></th></tr>
 {% if let Some(p) = parent_path %}
-<tr class="light">
-<td class="mode"></td>
-<td class="size"></td>
-<td class="list"><a href="/{{ repo }}/tree/{{ rev|urlencode_strict }}{% if !p.is_empty() %}/{{ p|urlencode }}{% endif %}">..</a></td>
-<td class="link"></td>
+<tr>
+<td class="ls-mode">d---------</td>
+<td><a class="ls-dir" href="/{{ repo }}/tree/{{ p|urlencode }}?h={{ head|urlencode_strict }}">..</a></td>
+<td class="ls-size"></td>
+<td></td>
 </tr>
 {% endif %}
 {% for e in entries %}
-<tr class="{% if loop.index0 % 2 == 0 %}dark{% else %}light{% endif %}">
-<td class="mode">{{ e.mode }}</td>
-<td class="size">{{ e.size }}</td>
-<td class="list">{% if e.is_dir %}<a class="list" href="/{{ repo }}/tree/{{ rev|urlencode_strict }}/{{ e.path|urlencode }}">{{ e.name }}</a>{% else %}<a class="list" href="/{{ repo }}/blob/{{ rev|urlencode_strict }}/{{ e.path|urlencode }}">{{ e.name }}</a>{% endif %}</td>
-<td class="link">{% if e.is_dir %}<a href="/{{ repo }}/tree/{{ rev|urlencode_strict }}/{{ e.path|urlencode }}">tree</a> | <a href="/{{ repo }}/history/{{ rev|urlencode_strict }}/{{ e.path|urlencode }}">history</a>{% else %}<a href="/{{ repo }}/blob/{{ rev|urlencode_strict }}/{{ e.path|urlencode }}">blob</a> | <a href="/{{ repo }}/history/{{ rev|urlencode_strict }}/{{ e.path|urlencode }}">history</a> | <a href="/{{ repo }}/raw/{{ rev|urlencode_strict }}/{{ e.path|urlencode }}">raw</a>{% endif %}</td>
+<tr>
+<td class="ls-mode">{{ e.mode }}</td>
+<td>{% if e.is_dir %}<a class="ls-dir" href="/{{ repo }}/tree/{{ e.path|urlencode }}?h={{ head|urlencode_strict }}">{{ e.name }}</a>{% else %}{% if e.is_submodule %}<span class="ls-mod">{{ e.name }}</span>{% else %}<a class="ls-blob" href="/{{ repo }}/tree/{{ e.path|urlencode }}?h={{ head|urlencode_strict }}">{{ e.name }}</a>{% endif %}{% endif %}</td>
+<td class="ls-size">{{ e.size }}</td>
+<td>{% if !e.is_submodule %}<a class="button" href="/{{ repo }}/log/{{ e.path|urlencode }}?h={{ head|urlencode_strict }}">log</a>{% if !e.is_dir %}<a class="button" href="/{{ repo }}/plain/{{ e.path|urlencode }}?h={{ head|urlencode_strict }}">plain</a>{% if show_blame %}<a class="button" href="/{{ repo }}/blame/{{ e.path|urlencode }}?h={{ head|urlencode_strict }}">blame</a>{% endif %}{% endif %}{% endif %}</td>
 </tr>
 {% endfor %}
 </table>
-</div>
 {% endblock %}

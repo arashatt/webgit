@@ -1,53 +1,61 @@
 {% extends "base.html" %}
 
 {#
-  Every page that extends this template needs these fields:
-    repo: String          e.g. "linux.git"
-    rev: String           ref or commit id used by the commit/commitdiff/tree tabs
-    active: &'static str  summary | shortlog | log | commit | commitdiff | tree
-                          | tag | tags | heads | blob | blame | search
-    description: String   shown in the footer
-  Pages can add a second nav row by overriding the `nav_extra` block.
+  Every page extending this template needs these fields (put them in one shared
+  RepoCtx struct and Deref to it, see src/ctx.rs). Page structs must NOT reuse
+  these names for their own fields.
+    repo: String                   e.g. "linux.git"
+    head: String                   current ref (branch/tag name), never empty
+    branches: Vec<BranchOpt>       BranchOpt { name, selected: bool }  (branch switcher)
+    active: &'static str           summary | refs | log | tree | commit | diff | stats | about
+    description: String
+    owner: String
+    has_stats: bool                show the stats tab
+    has_about: bool                show the about tab
+    search_type: String            grep | author | committer | range
+    search_text: String
 #}
 
-{% block title %}{{ repo }} - {{ active }}{% endblock %}
+{% block title %}{{ repo }} - {{ description }}{% endblock %}
 
 {% block head %}
-<link rel="alternate" type="application/atom+xml" title="{{ repo }} Atom feed" href="/{{ repo }}/atom">
-<link rel="alternate" type="application/rss+xml" title="{{ repo }} RSS feed" href="/{{ repo }}/rss">
+<link rel="alternate" title="Atom feed" href="/{{ repo }}/atom/?h={{ head|urlencode_strict }}" type="application/atom+xml">
 {% endblock %}
 
-{% block breadcrumb %}<a href="/">projects</a> / <a href="/{{ repo }}/summary">{{ repo }}</a> / {{ active }}{% endblock %}
+{% block header %}
+<table id="header">
+<tr>
+<td class="logo" rowspan="2"><a href="/">{% include "logo.html" %}</a></td>
+<td class="main"><a href="/">index</a> : <a title="{{ repo }}" href="/{{ repo }}/">{{ repo }}</a></td>
+<td class="form"><form method="get" action="">
+<select name="h" onchange="this.form.submit();">
+{% for b in branches %}<option value="{{ b.name }}"{% if b.selected %} selected{% endif %}>{{ b.name }}</option>{% endfor %}
+</select> <input type="submit" value="switch">
+</form></td>
+</tr>
+<tr><td class="sub">{{ description }}</td><td class="sub right">{{ owner }}</td></tr>
+</table>
+{% endblock %}
 
-{% block search %}
-<form method="get" action="/{{ repo }}/search">
-<div class="search">
-<input type="hidden" name="h" value="{{ rev }}">
-<select name="st">
-<option value="commit">commit</option>
-<option value="author">author</option>
-<option value="committer">committer</option>
-<option value="pickaxe">pickaxe</option>
+{% block tabs %}
+<table class="tabs"><tr><td>
+<a{% if active == "summary" %} class="active"{% endif %} href="/{{ repo }}/?h={{ head|urlencode_strict }}">summary</a>
+<a{% if active == "refs" %} class="active"{% endif %} href="/{{ repo }}/refs/?h={{ head|urlencode_strict }}">refs</a>
+<a{% if active == "log" %} class="active"{% endif %} href="/{{ repo }}/log/?h={{ head|urlencode_strict }}">log</a>
+<a{% if active == "tree" %} class="active"{% endif %} href="/{{ repo }}/tree/?h={{ head|urlencode_strict }}">tree</a>
+<a{% if active == "commit" %} class="active"{% endif %} href="/{{ repo }}/commit/?h={{ head|urlencode_strict }}">commit</a>
+<a{% if active == "diff" %} class="active"{% endif %} href="/{{ repo }}/diff/?h={{ head|urlencode_strict }}">diff</a>
+{% if has_stats %}<a{% if active == "stats" %} class="active"{% endif %} href="/{{ repo }}/stats/?h={{ head|urlencode_strict }}">stats</a>{% endif %}
+{% if has_about %}<a{% if active == "about" %} class="active"{% endif %} href="/{{ repo }}/about/?h={{ head|urlencode_strict }}">about</a>{% endif %}
+</td><td class="form"><form class="right" method="get" action="/{{ repo }}/log/">
+<input type="hidden" name="h" value="{{ head }}">
+<select name="qt">
+<option value="grep"{% if search_type == "grep" %} selected{% endif %}>log msg</option>
+<option value="author"{% if search_type == "author" %} selected{% endif %}>author</option>
+<option value="committer"{% if search_type == "committer" %} selected{% endif %}>committer</option>
+<option value="range"{% if search_type == "range" %} selected{% endif %}>range</option>
 </select>
-<span title="search help">?</span> search:
-<input type="text" name="s">
-</div>
-</form>
-{% endblock %}
-
-{% block page_nav %}
-<div class="page_nav">
-{% if active == "summary" %}summary{% else %}<a href="/{{ repo }}/summary">summary</a>{% endif %} |
-{% if active == "shortlog" %}shortlog{% else %}<a href="/{{ repo }}/shortlog">shortlog</a>{% endif %} |
-{% if active == "log" %}log{% else %}<a href="/{{ repo }}/log">log</a>{% endif %} |
-{% if active == "commit" %}commit{% else %}<a href="/{{ repo }}/commit/{{ rev|urlencode_strict }}">commit</a>{% endif %} |
-{% if active == "commitdiff" %}commitdiff{% else %}<a href="/{{ repo }}/commitdiff/{{ rev|urlencode_strict }}">commitdiff</a>{% endif %} |
-{% if active == "tree" %}tree{% else %}<a href="/{{ repo }}/tree/{{ rev|urlencode_strict }}">tree</a>{% endif %}
-</div>
-{% endblock %}
-
-{% block footer %}
-<div class="page_footer_text">{{ description }}</div>
-<a class="rss_logo" href="/{{ repo }}/atom">Atom</a>
-<a class="rss_logo" href="/{{ repo }}/rss">RSS</a>
+<input class="txt" type="search" size="10" name="q" value="{{ search_text }}">
+<input type="submit" value="search">
+</form></td></tr></table>
 {% endblock %}

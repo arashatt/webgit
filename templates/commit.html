@@ -1,47 +1,37 @@
 {% extends "repo_base.html" %}
 
 {#
-  active = "commit", rev = c.id
+  active = "commit"
   Fields:
     c: CommitDetail
-      { id, subject, body, refs: Vec<RefLabel>,
+      { id, subject, body, refs: Vec<Deco>,
         author_name, author_email, author_date,
         committer_name, committer_email, committer_date,
         tree_id, parents: Vec<String> }
-    files: Vec<ChangedFile>
-      { path, status_class, status_text, deleted: bool }
-      status_class: new | deleted | moved | mode_chng | copied | "" (plain modification)
-      status_text: e.g. "new file with mode: 0644", empty for plain modifications
+      Deco { kind, name, url }
+    opts: DiffOpts { id, id2, ctx_lines, ignore_ws, stat_only }   (feeds the options panel)
+    diffstat: DiffStat { files: Vec<StatFile>, summary }
+      StatFile { path, status_class, mode, mode_change, changes, add_pct, rem_pct, none_pct, bar_pct }
+      status_class: add | del | upd      mode_change: "" or e.g. "[-rw-r--r-- -> -rwxr-xr-x]"
+    patches: Vec<DiffFile>
+      DiffFile { path, header, binary, hunks: Vec<Hunk> }
+        header: the diff --git / index / --- / +++ lines joined with "\n"
+      Hunk { header, lines: Vec<DiffLine> }      DiffLine { kind, text }
+        kind: add | del | ctx, text includes the leading + - or space
 #}
 
 {% block content %}
-<a class="title" href="/{{ repo }}/commit/{{ c.id }}">{{ c.subject }}{% for r in c.refs %} <span class="refs"><span class="{{ r.kind }}">{{ r.name }}</span></span>{% endfor %}</a>
-<div class="title_text">
-<table class="object_header">
-<tr><td>author</td><td>{{ c.author_name }} &lt;{{ c.author_email }}&gt;</td></tr>
-<tr><td></td><td>{{ c.author_date }}</td></tr>
-<tr><td>committer</td><td>{{ c.committer_name }} &lt;{{ c.committer_email }}&gt;</td></tr>
-<tr><td></td><td>{{ c.committer_date }}</td></tr>
-<tr><td>commit</td><td class="sha1">{{ c.id }}</td><td></td></tr>
-<tr><td>tree</td><td class="sha1"><a class="list" href="/{{ repo }}/tree/{{ c.id }}">{{ c.tree_id }}</a></td><td class="link"><a href="/{{ repo }}/tree/{{ c.id }}">tree</a> | <a href="/{{ repo }}/snapshot/{{ c.id }}">snapshot</a></td></tr>
+{% include "_panel.html" %}
+<div class="commit-subject">{{ c.subject }}{% for d in c.refs %}<a class="{{ d.kind }}" href="{{ d.url }}">{{ d.name }}</a>{% endfor %}</div>
+<table class="commit-info">
+<tr><th>author</th><td>{{ c.author_name }} &lt;{{ c.author_email }}&gt;</td><td class="right">{{ c.author_date }}</td></tr>
+<tr><th>committer</th><td>{{ c.committer_name }} &lt;{{ c.committer_email }}&gt;</td><td class="right">{{ c.committer_date }}</td></tr>
+<tr><th>commit</th><td colspan="2" class="sha1"><a href="/{{ repo }}/commit/?id={{ c.id }}">{{ c.id }}</a> (<a href="/{{ repo }}/patch/?id={{ c.id }}">patch</a>)</td></tr>
+<tr><th>tree</th><td colspan="2" class="sha1"><a href="/{{ repo }}/tree/?id={{ c.id }}">{{ c.tree_id }}</a></td></tr>
 {% for p in c.parents %}
-<tr><td>parent</td><td class="sha1"><a class="list" href="/{{ repo }}/commit/{{ p }}">{{ p }}</a></td><td class="link"><a href="/{{ repo }}/commit/{{ p }}">commit</a> | <a href="/{{ repo }}/commitdiff/{{ c.id }}?parent={{ p }}">diff</a></td></tr>
+<tr><th>parent</th><td colspan="2" class="sha1"><a href="/{{ repo }}/commit/?id={{ p }}">{{ p }}</a> (<a href="/{{ repo }}/diff/?id={{ c.id }}&amp;id2={{ p }}">diff</a>)</td></tr>
 {% endfor %}
 </table>
-</div>
-
-<div class="page_body">
-<div class="commit_message">{{ c.body }}</div>
-</div>
-
-<div class="list_head">{% if files.len() == 1 %}1 file changed:{% else %}{{ files.len() }} files changed:{% endif %}</div>
-<table class="diff_tree">
-{% for f in files %}
-<tr class="{% if loop.index0 % 2 == 0 %}light{% else %}dark{% endif %}">
-<td><a class="list" href="{% if f.deleted %}/{{ repo }}/commitdiff/{{ c.id }}#{{ f.path|urlencode }}{% else %}/{{ repo }}/blob/{{ c.id }}/{{ f.path|urlencode }}{% endif %}">{{ f.path }}</a></td>
-<td>{% if !f.status_text.is_empty() %}<span class="file_status {{ f.status_class }}">[{{ f.status_text }}]</span>{% endif %}</td>
-<td class="link">{% if !f.deleted %}<a href="/{{ repo }}/blob/{{ c.id }}/{{ f.path|urlencode }}">blob</a> | {% endif %}<a href="/{{ repo }}/commitdiff/{{ c.id }}#{{ f.path|urlencode }}">diff</a> | <a href="/{{ repo }}/history/{{ c.id }}/{{ f.path|urlencode }}">history</a></td>
-</tr>
-{% endfor %}
-</table>
+<div class="commit-msg">{{ c.body }}</div>
+{% include "_diff.html" %}
 {% endblock %}

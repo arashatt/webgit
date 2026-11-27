@@ -32,7 +32,10 @@ impl Repository {
     pub fn tree(&self) -> Result<Tree, git2::Error> {
         Ok(self.head()?.peel_to_tree().unwrap())
     }
-
+    
+    pub fn name(&self) -> String {
+        self.name
+    }
     pub fn index(&self) -> Result<Index, git2::Error> {
         Ok(self.repo.index().unwrap())
     }

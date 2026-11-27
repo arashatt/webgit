@@ -3,31 +3,41 @@
 {#
   active = "log"
   Fields:
-    commits: Vec<LogEntry>
-      LogEntry { id, age, date, author, subject, body, refs: Vec<RefLabel> }
-      body is the message without its first line
-    prev_page: Option<usize>, next_page: Option<usize>
+    commits: Vec<LogRow>
+      LogRow { id, age, age_class, date, subject, message, author, files, insertions, deletions, refs: Vec<Deco> }
+      message is the body below the subject; only shown when showmsg is true
+      Deco { kind, name, url }
+    showmsg: bool
+    page_url: String        current log URL without ofs/showmsg, must already contain "?",
+                            e.g. "/linux.git/log/?h=master" (add &qt=..&q=.. for searches)
+    prev_ofs: Option<usize>
+    next_ofs: Option<usize>
 #}
 
-{% block nav_extra %}
-<div class="page_nav">
-{% if let Some(p) = prev_page %}<a href="?page=0">first</a> &sdot; <a href="?page={{ p }}">prev</a>{% else %}first &sdot; prev{% endif %} &sdot;
-{% if let Some(n) = next_page %}<a href="?page={{ n }}">next</a>{% else %}next{% endif %}
-</div>
-{% endblock %}
-
 {% block content %}
+<table class="list nowrap">
+<tr class="nohover">
+<th class="left">Age</th>
+<th class="left">Commit message ({% if showmsg %}<a href="{{ page_url }}">Collapse</a>{% else %}<a href="{{ page_url }}&amp;showmsg=1">Expand</a>{% endif %})</th>
+<th class="left">Author</th>
+<th class="left">Files</th>
+<th class="left">Lines</th>
+</tr>
 {% for c in commits %}
-<div>
-<a class="title" href="/{{ repo }}/commit/{{ c.id }}"><span class="age">{{ c.age }}</span>{{ c.subject }}{% for r in c.refs %} <span class="refs"><span class="{{ r.kind }}">{{ r.name }}</span></span>{% endfor %}</a>
-</div>
-<div class="title_text">
-<div class="log_link"><a href="/{{ repo }}/commit/{{ c.id }}">commit</a> | <a href="/{{ repo }}/commitdiff/{{ c.id }}">commitdiff</a> | <a href="/{{ repo }}/tree/{{ c.id }}">tree</a><br/></div>
-<i>{{ c.author }} [{{ c.date }}]</i><br/>
-</div>
-<div class="log_body">{{ c.body }}</div>
-{% endfor %}
-{% if let Some(n) = next_page %}
-<div class="page_nav"><a href="?page={{ n }}">next</a></div>
+<tr>
+<td><span class="{{ c.age_class }}" title="{{ c.date }}">{{ c.age }}</span></td>
+<td class="logsubject"><a href="/{{ repo }}/commit/?id={{ c.id }}">{{ c.subject }}</a>{% for d in c.refs %}<a class="{{ d.kind }}" href="{{ d.url }}">{{ d.name }}</a>{% endfor %}</td>
+<td>{{ c.author }}</td>
+<td>{{ c.files }}</td>
+<td><span class="deletions">-{{ c.deletions }}</span>/<span class="insertions">+{{ c.insertions }}</span></td>
+</tr>
+{% if showmsg && !c.message.is_empty() %}
+<tr class="nohover-highlight"><td></td><td colspan="4" class="logmsg">{{ c.message }}</td></tr>
 {% endif %}
+{% endfor %}
+</table>
+<ul class="pager">
+{% if let Some(p) = prev_ofs %}<li><a href="{{ page_url }}&amp;ofs={{ p }}" rel="prev">[prev]</a></li>{% endif %}
+{% if let Some(n) = next_ofs %}<li><a href="{{ page_url }}&amp;ofs={{ n }}" rel="next">[next]</a></li>{% endif %}
+</ul>
 {% endblock %}

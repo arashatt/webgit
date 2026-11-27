@@ -1,40 +1,36 @@
 {% extends "repo_base.html" %}
 
 {#
-  active = "blob"
+  active = "tree"    (cgit shows blobs under the tree tab)
   Fields:
     path: String                   full file path
-    path_parts: Vec<PathPart>      PathPart { name, path }, last item is the file itself
+    path_parts: Vec<PathPart>      PathPart { name, path }, the last item is the file itself
     blob_id: String
-    size: String                   pre-formatted, e.g. "12.4 KiB"
+    size: String                   pre-formatted, e.g. "12.4k"
     binary: bool
     truncated: bool                true if `lines` was cut because the file is large
-    lines: Vec<String>             empty when binary
+    lines: Vec<String>             empty when binary; every element keeps its trailing
+                                   newline (use content.split_inclusive('\n'))
+  Both columns are built from the same `lines`. The line-number links are block
+  elements (see cgit.css), so the template needs no newlines inside the <pre> blocks.
 #}
 
-{% block nav_extra %}
-<div class="page_nav">
-<a href="/{{ repo }}/commit/{{ rev|urlencode_strict }}">commit</a> |
-<a href="/{{ repo }}/blame/{{ rev|urlencode_strict }}/{{ path|urlencode }}">blame</a> |
-<a href="/{{ repo }}/history/{{ rev|urlencode_strict }}/{{ path|urlencode }}">history</a> |
-<a href="/{{ repo }}/raw/{{ rev|urlencode_strict }}/{{ path|urlencode }}">raw</a> |
-<a href="/{{ repo }}/blob/HEAD/{{ path|urlencode }}">HEAD</a>
-</div>
+{% block path_bar %}
+<div class="path">path: <a href="/{{ repo }}/tree/?h={{ head|urlencode_strict }}">root</a>{% for part in path_parts %}/<a href="/{{ repo }}/tree/{{ part.path|urlencode }}?h={{ head|urlencode_strict }}">{{ part.name }}</a>{% endfor %} (<a href="/{{ repo }}/plain/{{ path|urlencode }}?h={{ head|urlencode_strict }}">plain</a>) ({{ size }})</div>
 {% endblock %}
 
 {% block content %}
-<div class="title">{{ blob_id }}</div>
-<div class="page_path">
-<a href="/{{ repo }}/tree/{{ rev|urlencode_strict }}" title="tree root">[{{ repo }}]</a>{% for part in path_parts %} / {% if loop.last %}<a href="/{{ repo }}/blob/{{ rev|urlencode_strict }}/{{ part.path|urlencode }}">{{ part.name }}</a>{% else %}<a href="/{{ repo }}/tree/{{ rev|urlencode_strict }}/{{ part.path|urlencode }}">{{ part.name }}</a>{% endif %}{% endfor %}
-</div>
-<div class="page_body">
 {% if binary %}
-<div class="pre">Binary file ({{ size }}) &mdash; <a href="/{{ repo }}/raw/{{ rev|urlencode_strict }}/{{ path|urlencode }}">download raw</a></div>
+<div>blob: {{ blob_id }} (binary: {{ size }})</div>
 {% else %}
-{% for line in lines %}<div class="pre"><a id="l{{ loop.index }}" href="#l{{ loop.index }}" class="linenr">{{ loop.index }}</a> {{ line }}</div>{% endfor %}
+<table class="blob">
+<tr>
+<td class="linenumbers"><pre>{% for _ in lines %}<a id="n{{ loop.index }}" href="#n{{ loop.index }}">{{ loop.index }}</a>{% endfor %}</pre></td>
+<td class="lines"><pre><code>{% for line in lines %}{{ line }}{% endfor %}</code></pre></td>
+</tr>
+</table>
 {% if truncated %}
-<div class="pre">... file truncated ({{ size }}) &mdash; <a href="/{{ repo }}/raw/{{ rev|urlencode_strict }}/{{ path|urlencode }}">view raw</a></div>
+<div>... file truncated ({{ size }}), <a href="/{{ repo }}/plain/{{ path|urlencode }}?h={{ head|urlencode_strict }}">view plain</a></div>
 {% endif %}
 {% endif %}
-</div>
 {% endblock %}

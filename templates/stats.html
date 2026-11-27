@@ -1,0 +1,41 @@
+{% extends "repo_base.html" %}
+
+{#
+  active = "stats"
+  Fields:
+    period: String                 w | m | q | y
+    period_label: String           week | month | quarter | year
+    range_label: String            e.g. the branch name
+    period_names: Vec<String>      column headings, e.g. ["2026-09", "2026-10"]
+    rows: Vec<StatRow>             StatRow { name, counts: Vec<usize>, total }
+                                   counts must have one entry per period_names item
+    totals: Vec<usize>             column sums, same length as period_names
+    grand_total: usize
+#}
+
+{% block content %}
+<div class="cgit-panel">
+<b>stat options</b>
+<form method="get">
+<input type="hidden" name="h" value="{{ head }}">
+<table>
+<tr><td colspan="2"></td></tr>
+<tr><td class="label">period:</td><td class="ctrl"><select name="period" onchange="this.form.submit();">
+<option value="w"{% if period == "w" %} selected{% endif %}>week</option>
+<option value="m"{% if period == "m" %} selected{% endif %}>month</option>
+<option value="q"{% if period == "q" %} selected{% endif %}>quarter</option>
+<option value="y"{% if period == "y" %} selected{% endif %}>year</option>
+</select></td></tr>
+<tr><td></td><td class="ctrl"><noscript><input type="submit" value="reload"></noscript></td></tr>
+</table>
+</form>
+</div>
+<h2>Commits per author per {{ period_label }} ({{ range_label }})</h2>
+<table class="stats">
+<tr><th class="left">Author</th>{% for p in period_names %}<th>{{ p }}</th>{% endfor %}<th>Total</th></tr>
+{% for r in rows %}
+<tr><td class="left">{{ r.name }}</td>{% for n in r.counts %}<td>{{ n }}</td>{% endfor %}<td class="sum">{{ r.total }}</td></tr>
+{% endfor %}
+<tr><td class="total">Total</td>{% for n in totals %}<td class="sum">{{ n }}</td>{% endfor %}<td class="sum">{{ grand_total }}</td></tr>
+</table>
+{% endblock %}

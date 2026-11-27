@@ -1,76 +1,68 @@
 {% extends "repo_base.html" %}
 
 {#
-  active = "summary", rev = "HEAD" (or the default branch)
+  active = "summary"
   Fields:
-    owner: String, last_change: String, clone_urls: Vec<String>
-    commits: Vec<CommitRow>   (latest ~16)    has_more_commits: bool
-    tags: Vec<TagRow>         (latest ~16)    has_more_tags: bool
-    heads: Vec<HeadRow>       (~16)           has_more_heads: bool
-    readme: Option<String>    plain text, escaped on output
+    branch_rows: Vec<BranchRow>   BranchRow { name, commit_id, subject, author, age, age_class, date }
+    tag_rows: Vec<TagRow>         TagRow { name, annotated: bool, commit_id, snapshot_name, author, age, age_class, date }
+                                  snapshot_name is "" when snapshots are disabled
+    commits: Vec<LogRow>          LogRow { id, age, age_class, date, subject, message, author,
+                                           files, insertions, deletions, refs: Vec<Deco> }
+                                  Deco { kind, name, url }  kind: branch-deco | tag-deco | tag-annotated-deco | remote-deco | deco
+    has_more_branches, has_more_tags, has_more_commits: bool
+    clone_urls: Vec<String>
 #}
 
 {% block content %}
-<div class="title">&nbsp;</div>
-<table>
-<tr id="metadata_desc"><td>description</td><td>{{ description }}</td></tr>
-<tr id="metadata_owner"><td>owner</td><td>{{ owner }}</td></tr>
-<tr id="metadata_lchange"><td>last change</td><td>{{ last_change }}</td></tr>
-{% for u in clone_urls %}
-<tr class="metadata_url"><td>{% if loop.first %}URL{% endif %}</td><td>{{ u }}</td></tr>
-{% endfor %}
-</table>
-
-<div><a class="title" href="/{{ repo }}/shortlog">shortlog</a></div>
-<table class="shortlog">
-{% for c in commits %}
-<tr class="{% if loop.index0 % 2 == 0 %}light{% else %}dark{% endif %}">
-<td title="{{ c.date }}"><i>{{ c.age }}</i></td>
-<td><i>{{ c.author }}</i></td>
-<td><a class="list subject" href="/{{ repo }}/commit/{{ c.id }}">{{ c.subject }}</a>{% for r in c.refs %} <span class="refs"><span class="{{ r.kind }}">{{ r.name }}</span></span>{% endfor %}</td>
-<td class="link"><a href="/{{ repo }}/commit/{{ c.id }}">commit</a> | <a href="/{{ repo }}/commitdiff/{{ c.id }}">commitdiff</a> | <a href="/{{ repo }}/tree/{{ c.id }}">tree</a> | <a href="/{{ repo }}/snapshot/{{ c.id }}">snapshot</a></td>
+<table class="list nowrap">
+<tr class="nohover"><th class="left">Branch</th><th class="left">Commit message</th><th class="left">Author</th><th class="left" colspan="2">Age</th></tr>
+{% for b in branch_rows %}
+<tr>
+<td><a href="/{{ repo }}/log/?h={{ b.name|urlencode_strict }}">{{ b.name }}</a></td>
+<td><a href="/{{ repo }}/commit/?id={{ b.commit_id }}">{{ b.subject }}</a></td>
+<td>{{ b.author }}</td>
+<td colspan="2"><span class="{{ b.age_class }}" title="{{ b.date }}">{{ b.age }}</span></td>
 </tr>
 {% endfor %}
-{% if has_more_commits %}
-<tr><td colspan="4"><a href="/{{ repo }}/shortlog">...</a></td></tr>
+{% if has_more_branches %}
+<tr class="nohover"><td colspan="5"><a href="/{{ repo }}/refs/?h={{ head|urlencode_strict }}">[...]</a></td></tr>
 {% endif %}
-</table>
 
-{% if !tags.is_empty() %}
-<div><a class="title" href="/{{ repo }}/tags">tags</a></div>
-<table class="tags">
-{% for t in tags %}
-<tr class="{% if loop.index0 % 2 == 0 %}light{% else %}dark{% endif %}">
-<td><i>{{ t.age }}</i></td>
-<td><a class="list name" href="{% if t.annotated %}/{{ repo }}/tag/{{ t.name|urlencode_strict }}{% else %}/{{ repo }}/commit/{{ t.commit_id }}{% endif %}">{{ t.name }}</a></td>
-<td><a class="list subject" href="/{{ repo }}/commit/{{ t.commit_id }}">{{ t.subject }}</a></td>
-<td class="link">{% if t.annotated %}<a href="/{{ repo }}/tag/{{ t.name|urlencode_strict }}">tag</a> | {% endif %}<a href="/{{ repo }}/commit/{{ t.commit_id }}">commit</a> | <a href="/{{ repo }}/shortlog/{{ t.name|urlencode_strict }}">shortlog</a> | <a href="/{{ repo }}/log/{{ t.name|urlencode_strict }}">log</a></td>
+<tr class="nohover"><td colspan="5">&nbsp;</td></tr>
+<tr class="nohover"><th class="left">Tag</th><th class="left">Download</th><th class="left">Author</th><th class="left" colspan="2">Age</th></tr>
+{% for t in tag_rows %}
+<tr>
+<td><a href="{% if t.annotated %}/{{ repo }}/tag/?h={{ t.name|urlencode_strict }}{% else %}/{{ repo }}/commit/?id={{ t.commit_id }}{% endif %}">{{ t.name }}</a></td>
+<td>{% if !t.snapshot_name.is_empty() %}<a href="/{{ repo }}/snapshot/{{ t.snapshot_name|urlencode }}">{{ t.snapshot_name }}</a>{% endif %}</td>
+<td>{{ t.author }}</td>
+<td colspan="2"><span class="{{ t.age_class }}" title="{{ t.date }}">{{ t.age }}</span></td>
 </tr>
 {% endfor %}
 {% if has_more_tags %}
-<tr><td colspan="4"><a href="/{{ repo }}/tags">...</a></td></tr>
-{% endif %}
-</table>
+<tr class="nohover"><td colspan="5"><a href="/{{ repo }}/refs/?h={{ head|urlencode_strict }}">[...]</a></td></tr>
 {% endif %}
 
-{% if !heads.is_empty() %}
-<div><a class="title" href="/{{ repo }}/heads">heads</a></div>
-<table class="heads">
-{% for h in heads %}
-<tr class="{% if loop.index0 % 2 == 0 %}light{% else %}dark{% endif %}">
-<td><i>{{ h.age }}</i></td>
-<td class="{% if h.current %}current_head{% endif %}"><a class="list name" href="/{{ repo }}/shortlog/{{ h.name|urlencode_strict }}">{{ h.name }}</a></td>
-<td class="link"><a href="/{{ repo }}/shortlog/{{ h.name|urlencode_strict }}">shortlog</a> | <a href="/{{ repo }}/log/{{ h.name|urlencode_strict }}">log</a> | <a href="/{{ repo }}/tree/{{ h.name|urlencode_strict }}">tree</a></td>
+<tr class="nohover"><td colspan="5">&nbsp;</td></tr>
+<tr class="nohover"><th class="left">Age</th><th class="left">Commit message</th><th class="left">Author</th><th class="left">Files</th><th class="left">Lines</th></tr>
+{% for c in commits %}
+<tr>
+<td><span class="{{ c.age_class }}" title="{{ c.date }}">{{ c.age }}</span></td>
+<td class="logsubject"><a href="/{{ repo }}/commit/?id={{ c.id }}">{{ c.subject }}</a>{% for d in c.refs %}<a class="{{ d.kind }}" href="{{ d.url }}">{{ d.name }}</a>{% endfor %}</td>
+<td>{{ c.author }}</td>
+<td>{{ c.files }}</td>
+<td><span class="deletions">-{{ c.deletions }}</span>/<span class="insertions">+{{ c.insertions }}</span></td>
 </tr>
 {% endfor %}
-{% if has_more_heads %}
-<tr><td colspan="3"><a href="/{{ repo }}/heads">...</a></td></tr>
-{% endif %}
-</table>
+{% if has_more_commits %}
+<tr class="nohover"><td colspan="5"><a href="/{{ repo }}/log/?h={{ head|urlencode_strict }}">[...]</a></td></tr>
 {% endif %}
 
-{% if let Some(text) = readme %}
-<div class="title">README</div>
-<div class="readme">{{ text }}</div>
+{% if !clone_urls.is_empty() %}
+<tr class="nohover"><td colspan="5">&nbsp;</td></tr>
+<tr class="nohover"><th class="left" colspan="5">Clone</th></tr>
+{% for u in clone_urls %}
+<tr><td colspan="5"><a rel="vcs-git" href="{{ u }}" title="{{ repo }} Git repository">{{ u }}</a></td></tr>
+{% endfor %}
 {% endif %}
+</table>
 {% endblock %}

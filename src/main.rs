@@ -128,10 +128,11 @@ async fn index(Path(name): Path<String>) -> (StatusCode, Html<String>) {
 
     let x = Tree {
         base: RepoBase {
-            repo: "".to_owned(),
-            rev: "".to_owned(),
+            repo: name.clone(), 
+            rev: "Index".to_owned(),
             active: "tree",
-            description: "".to_owned(),
+            // TODO!
+            description: "Description to be defined later.".to_owned(),
         },
         path_parts: vec![],
         parent_path: None,

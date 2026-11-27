@@ -1,0 +1,11 @@
+{% extends "repo_base.html" %}
+
+{#
+  active = "diff"
+  Fields: opts, diffstat, patches, same types as commit.html
+#}
+
+{% block content %}
+{% include "_panel.html" %}
+{% include "_diff.html" %}
+{% endblock %}

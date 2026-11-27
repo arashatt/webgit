@@ -1,0 +1,19 @@
+{% if !diffstat.files.is_empty() %}
+<div class="diffstat-header"><a href="#">Diffstat</a></div>
+<table class="diffstat">
+{% for f in diffstat.files %}
+<tr>
+<td class="mode">{{ f.mode }}{% if !f.mode_change.is_empty() %}<span class="modechange">{{ f.mode_change }}</span>{% endif %}</td>
+<td class="{{ f.status_class }}"><a href="#{{ f.path|urlencode }}">{{ f.path }}</a></td>
+<td class="right">{{ f.changes }}</td>
+<td class="graph"><table width="{{ f.bar_pct }}%"><tr><td class="add" style="width: {{ f.add_pct }}%;"></td><td class="rem" style="width: {{ f.rem_pct }}%;"></td><td class="none" style="width: {{ f.none_pct }}%;"></td></tr></table></td>
+</tr>
+{% endfor %}
+</table>
+<div class="diffstat-summary">{{ diffstat.summary }}</div>
+{% endif %}
+{% if !opts.stat_only %}
+<table class="diff"><tr><td>
+{% for p in patches %}<div class="head" id="{{ p.path }}">{{ p.header }}</div>{% if p.binary %}<div class="ctx">Binary files differ</div>{% else %}{% for h in p.hunks %}<div class="hunk">{{ h.header }}</div>{% for l in h.lines %}<div class="{{ l.kind }}">{{ l.text }}</div>{% endfor %}{% endfor %}{% endif %}{% endfor %}
+</td></tr></table>
+{% endif %}
