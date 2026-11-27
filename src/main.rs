@@ -4,6 +4,8 @@
 //! cargo run -p example-form
 //! ```
 
+use std::path::Path as OsPath;
+use askama::Template;
 use axum::response::IntoResponse;
 use axum::{
     Router, ServiceExt,
@@ -16,11 +18,10 @@ use axum::{
 use git2::Repository;
 use serde::Deserialize;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use askama::Template;
 mod git;
 mod html;
 use git::repository::Repository as Repo;
-use html::html::{RepoBase,Tree};
+use html::html::{RepoBase, Tree};
 use tower_http::normalize_path::NormalizePathLayer;
 use tower_http::services::ServeDir;
 use tower_layer::Layer;
@@ -96,7 +97,6 @@ async fn accept_form(Form(input): Form<Input>) -> Html<String> {
     dbg!(&input);
     Html(format!("email='{}'\nname='{}'\n", input.email, input.name))
 }
-use std::path::Path as OsPath;
 async fn index(Path(name): Path<String>) -> (StatusCode, Html<String>) {
     dbg!(&name);
     let path_template = format!(
@@ -126,15 +126,16 @@ async fn index(Path(name): Path<String>) -> (StatusCode, Html<String>) {
         .collect();
     dbg!(&html_list);
 
-    let x = Tree{
-        base:  RepoBase{repo: "".to_owned(),
-                        rev: "".to_owned(),
-                        active: "tree",
-                        description: "".to_owned(),
-                        },
-        path_parts: vec!(),
+    let x = Tree {
+        base: RepoBase {
+            repo: "".to_owned(),
+            rev: "".to_owned(),
+            active: "tree",
+            description: "".to_owned(),
+        },
+        path_parts: vec![],
         parent_path: None,
-        entries: vec!(),
+        entries: vec![],
     };
     dbg!(&name);
     (StatusCode::OK, Html(x.render().unwrap()))
